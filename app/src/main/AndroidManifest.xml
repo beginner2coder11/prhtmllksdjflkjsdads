@@ -39,6 +39,29 @@
         tools:targetApi="31">
 
         <!-- Launcher: shows the configured splash, then opens the WebView. -->
+        <!-- AdMob application id, injected from app_settings.json at build time (see
+         build.gradle.kts). ALWAYS present and always well-formed: the Ads SDK throws
+         on startup if this is missing or malformed, and every build of this runtime
+         ships the SDK whether or not the user configured ads. -->
+    <meta-data
+        android:name="com.google.android.gms.ads.APPLICATION_ID"
+        android:value="${admobAppId}" />
+
+    <!-- Defers ad loading until MobileAds.initialize() is called, instead of starting
+         on app launch. Nothing is requested for an app with no ads configured. -->
+    <meta-data
+        android:name="com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT"
+        android:value="true" />
+
+    <!-- Google's ANR mitigations: the SDK talks to Play services over Binder, and
+         without these that work lands on the main thread. -->
+    <meta-data
+        android:name="com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION"
+        android:value="true" />
+    <meta-data
+        android:name="com.google.android.gms.ads.flag.OPTIMIZE_AD_LOADING"
+        android:value="true" />
+
         <activity
             android:name=".SplashActivity"
             android:exported="true"

@@ -17,6 +17,23 @@ val cfgVersionName = (appSettings["versionName"] as? String)?.takeIf { it.isNotB
 val cfgVersionCode = (appSettings["versionCode"] as? Number)?.toInt() ?: 1
 val cfgAppName = (appSettings["appName"] as? String)?.takeIf { it.isNotBlank() } ?: "My App"
 
+// ── AdMob ────────────────────────────────────────────────────────────────────
+// The app id is the one ad value that cannot be read at runtime: the SDK demands
+// it as manifest <meta-data>, so it is injected as a placeholder here. Everything
+// else (the unit ids) is ordinary config and is read from app_settings.json.
+//
+// The fallback is Google's PUBLIC SAMPLE app id, and it matters: a missing or
+// malformed value makes the Ads SDK throw on startup and kill the app before it
+// draws. Every build ships the SDK, including the ones with no ads configured, so
+// the placeholder must always be well-formed. Nothing is ever requested for it —
+// MainActivity only initialises the SDK when a real id is present.
+val adsSettings = (appSettings["ads"] as? Map<*, *>).orEmpty()
+val SAMPLE_ADMOB_APP_ID = "ca-app-pub-3940256099942544~3347511713"
+val cfgAdmobAppId = (adsSettings["admobAppId"] as? String)
+    ?.trim()
+    ?.takeIf { Regex("""^ca-app-pub-\d{16}~\d{10}$""").matches(it) }
+    ?: SAMPLE_ADMOB_APP_ID
+
 android {
     // Code/resource package stays fixed; only the installed applicationId varies.
     namespace = "com.web2app"
@@ -24,13 +41,17 @@ android {
 
     defaultConfig {
         applicationId = cfgPackage
-        minSdk = 21
+        // 23, not 21: play-services-ads 25.x refuses to merge below it. Only this
+        // ads-carrying runtime pays that cost — the ad-free Pro runtime stays at 21,
+        // which is the point of keeping them in separate repos.
+        minSdk = 23
         targetSdk = 36
         versionCode = cfgVersionCode
         versionName = cfgVersionName
 
         // Drives android:label so the launcher shows the user's app name.
         manifestPlaceholders["appLabel"] = cfgAppName
+        manifestPlaceholders["admobAppId"] = cfgAdmobAppId
     }
 
     // Fixed release signing key committed to the repo so every release build is
@@ -92,4 +113,12 @@ dependencies {
     // dashboard, so no google-services.json is needed in the app. Only activated
     // at runtime when app_settings.json has pushNotification + an oneSignalAppId.
     implementation("com.onesignal:OneSignal:5.1.6")
+
+    // AdMob. Present in every build of this runtime — the ad-free Pro runtime is a
+    // separate project — but only initialised when app_settings.json carries ids.
+    implementation(libs.admob)
+    // Consent (GDPR/EEA). AdMob policy requires a consent flow for EEA/UK users
+    // before personalised ads; without it those impressions are non-personalised
+    // at best and a policy risk at worst.
+    implementation(libs.ump)
 }

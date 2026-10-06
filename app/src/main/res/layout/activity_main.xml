@@ -86,6 +86,15 @@
 
     </FrameLayout>
 
+    <!-- AdMob banner. Zero height until an ad actually fills, so an app with no ads
+         configured (or one whose request comes back empty) loses no screen space. -->
+    <FrameLayout
+        android:id="@+id/adContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:visibility="gone" />
+
     <!-- Bottom Navigation — hidden by default; shown if showTabbar=true in app_settings.json -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"

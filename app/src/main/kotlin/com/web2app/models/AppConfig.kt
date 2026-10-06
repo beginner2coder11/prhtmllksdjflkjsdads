@@ -55,7 +55,9 @@ data class AppConfig(
      * Hide the status and navigation bars so the page owns the whole display. The
      * bars return on a swipe from the edge and hide again on their own.
      */
-    val fullScreen: Boolean = false
+    val fullScreen: Boolean = false,
+    /** AdMob unit ids. Empty ids simply mean that format is not used. */
+    val ads: Ads = Ads()
 )
 
 data class PageLoader(
@@ -90,6 +92,28 @@ data class OnboardingScreen(
     val title: String = "",
     val description: String = ""
 )
+
+/**
+ * AdMob configuration. Every field is optional: a blank id means that format is simply
+ * not used, which is how an app built with no monetisation behaves.
+ *
+ * [appId] is duplicated here only so the runtime can tell "ads configured" from "ads
+ * not configured" — the SDK itself reads it from the manifest, where build.gradle.kts
+ * injected it. Nothing initialises the SDK unless this is a real id.
+ */
+data class Ads(
+    val appId: String = "",
+    val banner: String = "",
+    val interstitial: String = "",
+    val rewarded: String = "",
+    val rewardedInterstitial: String = "",
+) {
+    /** Google's public sample app id, used as the build-time fallback. Never monetises. */
+    private val isSample: Boolean get() = appId == "ca-app-pub-3940256099942544~3347511713"
+
+    /** True when this app was built with a real AdMob account behind it. */
+    val enabled: Boolean get() = appId.isNotBlank() && !isSample
+}
 
 data class Splash(
     val color: String = "#FFFFFF",
@@ -236,7 +260,16 @@ fun parseAppConfig(json: JSONObject): AppConfig {
         onboardingImageShape = json.optInt("onboardingImageShape", 0),
         pageLoader = pageLoader,
         pullRefresh = json.optBoolean("pullRefresh", false),
-        fullScreen = json.optBoolean("fullScreen", false)
+        fullScreen = json.optBoolean("fullScreen", false),
+        ads = json.optJSONObject("ads").let { a ->
+            if (a == null) Ads() else Ads(
+                appId = a.optString("admobAppId"),
+                banner = a.optString("banner"),
+                interstitial = a.optString("interstitial"),
+                rewarded = a.optString("rewarded"),
+                rewardedInterstitial = a.optString("rewardedInterstitial"),
+            )
+        }
     )
 }
 
@@ -328,6 +361,15 @@ fun appConfigToJson(config: AppConfig): JSONObject {
     obj.put("pageLoader", plObj)
     obj.put("pullRefresh", config.pullRefresh)
     obj.put("fullScreen", config.fullScreen)
+    obj.put(
+        "ads",
+        JSONObject()
+            .put("admobAppId", config.ads.appId)
+            .put("banner", config.ads.banner)
+            .put("interstitial", config.ads.interstitial)
+            .put("rewarded", config.ads.rewarded)
+            .put("rewardedInterstitial", config.ads.rewardedInterstitial)
+    )
     return obj
 }
 

@@ -34,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     private var useCustomPageLoader = false
 
     private lateinit var permissionsHandler: PermissionsHandler
+    private var adBanner: AdBanner? = null
 
     /** Pending WebView file-input callback; must be invoked exactly once per chooser. */
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
@@ -92,6 +93,7 @@ class MainActivity : AppCompatActivity() {
 
         webView = findViewById(R.id.webView)
         swipeRefresh = findViewById(R.id.swipeRefresh)
+        adBanner = AdBanner(this, appConfig).also { it.attach(findViewById(R.id.adContainer)) }
         progressBar = findViewById(R.id.progressBar)
         bottomNav = findViewById(R.id.bottomNav)
 
@@ -568,5 +570,20 @@ class MainActivity : AppCompatActivity() {
     override fun onBackPressed() {
         if (webView.canGoBack()) webView.goBack()
         else super.onBackPressed()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        adBanner?.resume()
+    }
+
+    override fun onPause() {
+        adBanner?.pause()
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        adBanner?.destroy()
+        super.onDestroy()
     }
 }

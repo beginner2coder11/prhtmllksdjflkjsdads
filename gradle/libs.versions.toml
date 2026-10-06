@@ -4,6 +4,8 @@ kotlin = "2.3.20"
 coreKtx = "1.13.1"
 appcompat = "1.7.0"
 material = "1.12.0"
+admob = "25.4.0"
+ump = "4.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -11,6 +13,8 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-webkit = { group = "androidx.webkit", name = "webkit", version = "1.12.1" }
 androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version = "1.1.0" }
+admob = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "admob" }
+ump = { group = "com.google.android.ump", name = "user-messaging-platform", version.ref = "ump" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
