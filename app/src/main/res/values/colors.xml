@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand -->
+    <color name="colorPrimary">#5B5BD6</color>
+    <color name="colorPrimaryDark">#4338CA</color>
+    <color name="colorPrimaryLight">#EEF0FF</color>
+    <color name="colorAccent">#7C7CF0</color>
+    <color name="white">#FFFFFF</color>
+    <color name="ic_launcher_background">#5B5BD6</color>
+
+    <!-- Surfaces & text -->
+    <color name="appBackground">#F6F7FB</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="textPrimary">#111827</color>
+    <color name="textSecondary">#6B7280</color>
+    <color name="textHint">#9CA3AF</color>
+    <color name="divider">#E5E7EB</color>
+
+    <!-- States -->
+    <color name="success">#16A34A</color>
+    <color name="successLight">#E7F6EC</color>
+    <color name="danger">#DC2626</color>
+    <color name="dangerLight">#FDECEC</color>
+    <color name="scrim">#66111827</color>
+    <color name="stepInactive">#D1D5DB</color>
+</resources>

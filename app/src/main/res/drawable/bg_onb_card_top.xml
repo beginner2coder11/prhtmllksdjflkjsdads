@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- White card with only the top corners rounded — the bottom sheet in onboarding Style 1. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/surface" />
+    <corners
+        android:topLeftRadius="34dp"
+        android:topRightRadius="34dp" />
+</shape>

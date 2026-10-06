@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fixed onboarding frame; the page is inflated once and only its content + dots
+     animate when moving between screens (the panel/card frame stays put). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/onbHost"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface" />

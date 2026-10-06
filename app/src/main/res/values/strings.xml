@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">App Builder</string>
+
+    <!-- Home -->
+    <string name="home_title">My Apps</string>
+    <string name="home_subtitle">Build a native app from any website</string>
+    <string name="home_empty_title">No apps yet</string>
+    <string name="home_empty">Tap “Create app” to turn your first website into an app.</string>
+    <string name="home_create">Create app</string>
+    <string name="back">Back</string>
+    <string name="app_icon_desc">App icon</string>
+    <string name="preview">Preview</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete_title">Delete app</string>
+    <string name="delete_message">Delete %1$s? This cannot be undone.</string>
+
+    <!-- Builder -->
+    <string name="builder_title">Create App</string>
+    <string name="builder_title_edit">Edit App</string>
+    <string name="builder_subtitle">Complete each step to build your app</string>
+    <string name="builder_continue">Continue</string>
+    <string name="builder_all_done">All steps complete ✓</string>
+    <string name="builder_all_done_sub">Save your app and launch the preview.</string>
+    <string name="btn_save_preview">Save &amp; Preview</string>
+    <string name="btn_update_preview">Update &amp; Preview</string>
+    <string name="step_done_desc">Step complete</string>
+
+    <string name="step1_title">Website</string>
+    <string name="step1_sub">The site your app will open</string>
+    <string name="step2_title">App icon &amp; splash</string>
+    <string name="step2_sub">How your app looks on launch</string>
+    <string name="step3_title">Theme color</string>
+    <string name="step3_sub">Your app\'s accent color</string>
+    <string name="step4_title">Bottom tab bar</string>
+    <string name="step4_sub">Optional navigation tabs</string>
+    <string name="step5_title">Package &amp; version</string>
+    <string name="step5_sub">App identifier and version</string>
+    <string name="step6_title">Permissions</string>
+    <string name="step6_sub">What the app may access</string>
+
+    <string name="label_website_url">Website URL</string>
+    <string name="hint_website_url">https://example.com</string>
+    <string name="label_app_name">App name</string>
+    <string name="hint_app_name">My App</string>
+    <string name="missing_info_title">Missing information</string>
+    <string name="ok">OK</string>
+    <string name="error_url_required">Please enter a website URL before continuing.</string>
+    <string name="error_app_name_required">Please enter an app name before continuing.</string>
+    <string name="error_icon_required">Please choose an app icon before continuing.</string>
+    <string name="error_splash_required">Please choose a splash image before continuing.</string>
+    <string name="error_theme_required">Please enter a theme color before continuing.</string>
+    <string name="error_color_invalid">That color isn\'t valid. Use a hex value like #1976D2.</string>
+    <string name="error_no_tabs">Add at least one tab, or turn off the bottom tab bar.</string>
+    <string name="error_tab_incomplete">Each tab needs both a title and a URL.</string>
+
+    <string name="label_app_icon">App icon (512×512)</string>
+    <string name="label_splash_image">Splash image (1024×1024)</string>
+    <string name="splash_image_desc">Splash image</string>
+    <string name="btn_choose_image">Choose</string>
+
+    <!-- Onboarding -->
+    <string name="label_onb_image">Screen image</string>
+    <string name="onb_skip">Skip</string>
+    <string name="onb_next">Next</string>
+    <string name="label_splash_color">Splash background color</string>
+    <string name="hint_hex_color">#FFFFFF</string>
+
+    <string name="label_theme_color">Theme color</string>
+
+    <string name="label_enable_tabbar">Enable bottom tab bar</string>
+    <string name="label_show_titles">Show tab titles</string>
+    <string name="label_tab_active_color">Active color</string>
+    <string name="label_tab_inactive_color">Inactive color</string>
+    <string name="label_tab_bar_color">Bar background color</string>
+    <string name="label_tabs">Tabs</string>
+    <string name="btn_add_tab">+ Add tab</string>
+    <string name="hint_tab_title">Title</string>
+    <string name="hint_tab_url">https://…</string>
+
+    <string name="label_package_name">Package name</string>
+    <string name="label_version_name">Version name</string>
+    <string name="label_version_code">Version code</string>
+
+    <string name="pick_color">Pick a color</string>
+    <string name="custom_color">Custom color</string>
+    <string name="invalid_hex">Enter a valid hex color, e.g. #1976D2.</string>
+    <string name="label_tab_icon">Tab icon</string>
+    <string name="pick_icon">Pick an icon</string>
+    <string name="lucide_search_hint">Search icons…</string>
+    <string name="crop_title">Crop image</string>
+    <string name="done">Done</string>
+    <string name="select">Select</string>
+    <string name="close_preview">Close preview</string>
+
+    <string name="error_package_required">Please enter a package name before continuing.</string>
+    <string name="error_package_invalid">Use a valid package name like com.example.app.</string>
+    <string name="error_version_name_required">Please enter a version name (e.g. 1.0).</string>
+    <string name="error_version_code_invalid">Version code must be a whole number of 1 or more.</string>
+
+    <string name="label_permissions">Request these permissions at runtime:</string>
+    <string name="perm_location">Location</string>
+    <string name="perm_camera">Camera &amp; files</string>
+    <string name="perm_audio">Microphone</string>
+    <string name="no_app_for_link">No app on this device can open that link.</string>
+</resources>
