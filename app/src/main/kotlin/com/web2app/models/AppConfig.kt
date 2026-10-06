@@ -107,12 +107,21 @@ data class Ads(
     val interstitial: String = "",
     val rewarded: String = "",
     val rewardedInterstitial: String = "",
+    /** adaptive | banner | large | rectangle — chosen in the builder. */
+    val bannerSize: String = "adaptive",
+    /** Show an interstitial every N page changes. 0 disables the format. */
+    val interstitialEvery: Int = 0,
 ) {
-    /** Google's public sample app id, used as the build-time fallback. Never monetises. */
-    private val isSample: Boolean get() = appId == "ca-app-pub-3940256099942544~3347511713"
-
-    /** True when this app was built with a real AdMob account behind it. */
-    val enabled: Boolean get() = appId.isNotBlank() && !isSample
+    /**
+     * True when this app was built with ads configured at all.
+     *
+     * Google's sample ids count: a user who filled the builder's test ids wants to SEE
+     * ads, and test ads are how you preview them without touching a real account. What
+     * does not count is an app with no `ads` block, whose [appId] is empty — the
+     * manifest still carries the sample id there (the SDK crashes without a well-formed
+     * one), but nothing initialises and nothing is ever requested.
+     */
+    val enabled: Boolean get() = appId.isNotBlank()
 }
 
 data class Splash(
@@ -268,6 +277,8 @@ fun parseAppConfig(json: JSONObject): AppConfig {
                 interstitial = a.optString("interstitial"),
                 rewarded = a.optString("rewarded"),
                 rewardedInterstitial = a.optString("rewardedInterstitial"),
+                bannerSize = a.optString("bannerSize", "adaptive"),
+                interstitialEvery = a.optInt("interstitialEvery", 0),
             )
         }
     )
@@ -369,6 +380,8 @@ fun appConfigToJson(config: AppConfig): JSONObject {
             .put("interstitial", config.ads.interstitial)
             .put("rewarded", config.ads.rewarded)
             .put("rewardedInterstitial", config.ads.rewardedInterstitial)
+            .put("bannerSize", config.ads.bannerSize)
+            .put("interstitialEvery", config.ads.interstitialEvery)
     )
     return obj
 }

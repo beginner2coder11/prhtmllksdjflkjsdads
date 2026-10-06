@@ -52,9 +52,7 @@ class AdBanner(
 
         val ad = AdView(activity).apply {
             adUnitId = config.ads.banner
-            // Adaptive: the height Google recommends for this screen width, rather
-            // than a fixed 320x50 that looks wrong on a tablet.
-            setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(activity, widthDp(slot)))
+            setAdSize(sizeFor(slot))
             adListener = object : AdListener() {
                 override fun onAdLoaded() {
                     slot.visibility = View.VISIBLE
@@ -72,6 +70,19 @@ class AdBanner(
         slot.removeAllViews()
         slot.addView(ad)
         runCatching { ad.loadAd(AdRequest.Builder().build()) }
+    }
+
+    /**
+     * The size the project asked for. Adaptive is the default and the one Google
+     * recommends — it returns the height that suits this device's width, so the banner
+     * looks right on a phone and on a tablet instead of a fixed 320x50 stranded in the
+     * middle of a wide screen.
+     */
+    private fun sizeFor(slot: View): AdSize = when (config.ads.bannerSize) {
+        "rectangle" -> AdSize.MEDIUM_RECTANGLE
+        "large" -> AdSize.LARGE_BANNER
+        "banner" -> AdSize.BANNER
+        else -> AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(activity, widthDp(slot))
     }
 
     /** Usable width in dp, which is what the adaptive size is calculated from. */

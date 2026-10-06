@@ -35,6 +35,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var permissionsHandler: PermissionsHandler
     private var adBanner: AdBanner? = null
+    private var adInterstitial: AdInterstitial? = null
+    private var adRewarded: AdRewarded? = null
+    private var adRewardedInterstitial: AdRewarded? = null
 
     /** Pending WebView file-input callback; must be invoked exactly once per chooser. */
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
@@ -94,6 +97,20 @@ class MainActivity : AppCompatActivity() {
         webView = findViewById(R.id.webView)
         swipeRefresh = findViewById(R.id.swipeRefresh)
         adBanner = AdBanner(this, appConfig).also { it.attach(findViewById(R.id.adContainer)) }
+        adInterstitial = AdInterstitial(this, appConfig)
+        if (appConfig.ads.enabled) {
+            adRewarded = AdRewarded(this, appConfig.ads.rewarded, interstitialStyle = false)
+                .also { it.preload() }
+            adRewardedInterstitial =
+                AdRewarded(this, appConfig.ads.rewardedInterstitial, interstitialStyle = true)
+                    .also { it.preload() }
+            // Exposed to every page the WebView loads, so the bridge itself refuses
+            // calls from anything but the bundled site — see AdsBridge.
+            webView.addJavascriptInterface(
+                AdsBridge(this, webView, adRewarded, adRewardedInterstitial, adInterstitial),
+                AdsBridge.NAME
+            )
+        }
         progressBar = findViewById(R.id.progressBar)
         bottomNav = findViewById(R.id.bottomNav)
 
@@ -251,6 +268,10 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onPageFinished(view: WebView, url: String) {
+                // Counted here rather than at navigation START so the ad covers a page
+                // that has already rendered: dismissing it reveals content, not a
+                // spinner. The first finish is the app opening and never counts.
+                adInterstitial?.onPageFinished()
                 showLoading(false)
                 swipeRefresh.isRefreshing = false
             }
