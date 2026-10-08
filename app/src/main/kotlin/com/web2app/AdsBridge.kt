@@ -64,12 +64,15 @@ class AdsBridge(
     /** Runs [block] on the main thread, but only for the bundled site. */
     private fun guarded(block: () -> Unit) {
         activity.runOnUiThread {
-            if (isLocalPage()) block()
+            // A page can call these at any moment, including while the activity is
+            // going away. Nothing it does may crash the app it is running inside.
+            runCatching { if (isLocalPage()) block() }
+                .onFailure { android.util.Log.w("AdsBridge", "ad call failed", it) }
         }
     }
 
     @JavascriptInterface
-    fun isRewardedReady(): Boolean = rewarded?.isReady == true
+    fun isRewardedReady(): Boolean = runCatching { rewarded?.isReady == true }.getOrDefault(false)
 
     @JavascriptInterface
     fun showRewarded(tag: String?) = guarded {
@@ -94,6 +97,6 @@ class AdsBridge(
         val payload = JSONObject().put("tag", tag)
         if (type != null) payload.put("type", type).put("amount", amount)
         val js = "if (typeof window.$name === 'function') { window.$name($payload); }"
-        activity.runOnUiThread { webView.evaluateJavascript(js, null) }
+        activity.runOnUiThread { runCatching { webView.evaluateJavascript(js, null) } }
     }
 }

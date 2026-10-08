@@ -49,6 +49,9 @@ class AdBanner(
     private fun load() = activity.runOnUiThread {
         val slot = container ?: return@runOnUiThread
         if (activity.isFinishing || activity.isDestroyed) return@runOnUiThread
+        // Building and attaching the view is guarded too: a bad unit id or an SDK that
+        // cannot start must cost the user their banner, not their app.
+        runCatching {
 
         val ad = AdView(activity).apply {
             adUnitId = config.ads.banner
@@ -69,7 +72,8 @@ class AdBanner(
         view = ad
         slot.removeAllViews()
         slot.addView(ad)
-        runCatching { ad.loadAd(AdRequest.Builder().build()) }
+        ad.loadAd(AdRequest.Builder().build())
+        }.onFailure { Log.w(TAG, "banner unavailable", it) }
     }
 
     /**

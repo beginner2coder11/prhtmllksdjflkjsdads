@@ -48,13 +48,30 @@ object AdsConsent {
      * Callbacks land on the main thread.
      */
     fun whenReady(activity: Activity, block: () -> Unit) {
-        if (ready) return block()
+        if (ready) return runCatching { block() }.getOrElse { Log.w(TAG, "ad callback failed", it) }
         synchronized(waiters) { waiters += block }
         resolve(activity)
     }
 
-    private fun resolve(activity: Activity) {
-        if (ready || resolving) return
+    /**
+     * Every UMP call sits behind this.
+     *
+     * The app exists to show the user's content; ads are an extra. A publisher who has
+     * not created a consent message, a Play services build that answers oddly, a device
+     * with no WebView for the form — none of that may take the app down. On a throw the
+     * app simply runs without ads, which is the same outcome as consent being refused.
+     */
+    private inline fun guard(what: String, block: () -> Unit) {
+        try {
+            block()
+        } catch (e: Throwable) {
+            resolving = false
+            Log.w(TAG, "consent $what failed; continuing without ads", e)
+        }
+    }
+
+    private fun resolve(activity: Activity) = guard("lookup") {
+        if (ready || resolving) return@guard
         resolving = true
         val info = UserMessagingPlatform.getConsentInformation(activity)
 
@@ -63,16 +80,19 @@ object AdsConsent {
         // refresh below still runs, and still surfaces a form if one became required.
         if (info.canRequestAds()) start(activity)
 
+
         info.requestConsentInfoUpdate(
             activity,
             ConsentRequestParameters.Builder().build(),
             {
+                guard("form") {
                 UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) { error ->
                     // The form's own error is not the authority on anything;
                     // canRequestAds() is, whether the form showed or not.
                     if (error != null) Log.d(TAG, "consent form: ${error.message}")
                     resolving = false
                     if (info.canRequestAds()) start(activity)
+                }
                 }
             },
             { error ->
@@ -99,7 +119,10 @@ object AdsConsent {
         // a loaded device, so it never runs on the main thread.
         thread { runCatching { MobileAds.initialize(app) } }
         val pending = synchronized(waiters) { waiters.toList().also { waiters.clear() } }
-        activity.runOnUiThread { pending.forEach { it() } }
+        // One failing waiter must not stop the others, or take the app with it.
+        activity.runOnUiThread {
+            pending.forEach { runCatching { it() }.onFailure { e -> Log.w(TAG, "ad start failed", e) } }
+        }
     }
 
     private const val TAG = "AdsConsent"

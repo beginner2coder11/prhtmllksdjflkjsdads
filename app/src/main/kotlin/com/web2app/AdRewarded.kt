@@ -43,6 +43,7 @@ class AdRewarded(
             return
         }
         loading = true
+        runCatching {
         RewardedAd.load(
             activity, unitId, AdRequest.Builder().build(),
             object : RewardedAdLoadCallback() {
@@ -58,6 +59,7 @@ class AdRewarded(
                 }
             }
         )
+        }.onFailure { loading = false; Log.w(TAG, "rewarded request failed", it) }
     }
 
     /**
@@ -86,8 +88,15 @@ class AdRewarded(
             }
         }
         val ad = rewarded ?: return run { preload(); onUnavailable() }
-        ad.fullScreenContentCallback = callback
-        ad.show(activity) { onReward(it.type, it.amount) }
+        runCatching {
+            ad.fullScreenContentCallback = callback
+            ad.show(activity) { onReward(it.type, it.amount) }
+        }.onFailure {
+            Log.w(TAG, "rewarded show failed", it)
+            rewarded = null
+            onUnavailable()
+            preload()
+        }
     }
 
     private companion object {
