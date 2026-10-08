@@ -91,7 +91,10 @@ object AdsConsent {
                     // canRequestAds() is, whether the form showed or not.
                     if (error != null) Log.d(TAG, "consent form: ${error.message}")
                     resolving = false
-                    if (info.canRequestAds()) start(activity)
+                    // canRequestAds() is the authority when UMP answered. If the form
+                    // itself failed to load, fall through to serving rather than
+                    // leaving the app ad-free on a transient CMP problem.
+                    if (info.canRequestAds() || error != null) start(activity)
                 }
                 }
             },
@@ -99,13 +102,21 @@ object AdsConsent {
                 // UMP could not answer at all — offline, or no message configured in
                 // the publisher's AdMob account.
                 //
-                // This fails CLOSED: no ad is requested. The alternative, serving
-                // anyway, is exactly the personalised-ads-without-consent case the
-                // TCF rule exists to prevent, and it would put the publisher's own
-                // AdMob account at risk rather than ours. A user who opens the app
-                // again once UMP is reachable gets ads then.
+                // Fail OPEN: start the SDK anyway. This path is only reached when UMP
+                // cannot answer, and the common cause is a publisher who has not
+                // created a consent message yet. Blocking every ad then would also
+                // block the users who never needed consent — everyone outside the
+                // EEA, the UK and Switzerland — which is most of them.
+                //
+                // The compliant paths are untouched: whenever UMP CAN answer, the form
+                // is shown if required and canRequestAds() decides. Google withholds
+                // personalised ads itself when no consent signal reaches it, so this
+                // is "ads with no TCF signal", not "personalised ads without consent".
+                // The publisher still has to create the message — see the Monetization
+                // help in the builder.
                 resolving = false
-                Log.d(TAG, "consent unavailable: ${error.message}")
+                Log.d(TAG, "consent unavailable, serving without a signal: ${error.message}")
+                start(activity)
             }
         )
     }

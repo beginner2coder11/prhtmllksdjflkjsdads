@@ -1,7 +1,7 @@
 {
-    "appName": "Web2App",
-    "package": "com.web2app",
-    "websiteUrl": "https://appofweb.com",
+    "appName": "Ads Load Test",
+    "package": "com.web2app.adstest",
+    "websiteUrl": "https://example.com",
     "localContent": false,
     "localEntry": "index.html",
     "themeColor": "#ffffff",
@@ -11,7 +11,7 @@
         "size": 30,
         "loader": 0
     },
-    "showTabbar": true,
+    "showTabbar": false,
     "tabbarStyle": 0,
     "tabbars": [
         {
@@ -45,5 +45,11 @@
     "pushNotification": false,
     "oneSignalAppId": "",
     "playStore": false,
-    "appStore": false
+    "appStore": false,
+    "ads": {
+        "admobAppId": "ca-app-pub-3940256099942544~3347511713",
+        "banner": "ca-app-pub-3940256099942544/6300978111",
+        "rewarded": "ca-app-pub-3940256099942544/5224354917",
+        "bannerSize": "adaptive"
+    }
 }
