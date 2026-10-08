@@ -10,8 +10,8 @@ import org.json.JSONObject
  *
  * ### Why a bridge at all
  *
- * A banner and an every-Nth-page interstitial can be scheduled by the app, because the
- * app knows when a page changed. A rewarded ad cannot: it is a bargain the PAGE offers
+ * A banner can be placed by the app on its own. A rewarded ad cannot: it is a bargain
+ * the PAGE offers
  * — "watch this for 50 coins" — so only the page knows what is on offer, whether the
  * user accepted, and what to hand over afterwards. The trigger has to come from
  * JavaScript, and the outcome has to go back to JavaScript.
@@ -32,9 +32,6 @@ import org.json.JSONObject
  * ```js
  * AndroidAds.isRewardedReady()                  // boolean
  * AndroidAds.showRewarded("coins_50")           // tag is echoed back to you
- * AndroidAds.isRewardedInterstitialReady()
- * AndroidAds.showRewardedInterstitial("level_2")
- * AndroidAds.showInterstitial()                 // fire-and-forget
  *
  * // Define these to hear back. All are optional.
  * window.onAdReward = function (r) { /* {tag, type, amount} — ad was WATCHED */ };
@@ -49,8 +46,6 @@ class AdsBridge(
     private val activity: Activity,
     private val webView: WebView,
     private val rewarded: AdRewarded?,
-    private val rewardedInterstitial: AdRewarded?,
-    private val interstitial: AdInterstitial?,
 ) {
     companion object {
         /** The name the page calls: `AndroidAds.showRewarded(...)`. */
@@ -77,25 +72,8 @@ class AdsBridge(
     fun isRewardedReady(): Boolean = rewarded?.isReady == true
 
     @JavascriptInterface
-    fun isRewardedInterstitialReady(): Boolean = rewardedInterstitial?.isReady == true
-
-    @JavascriptInterface
     fun showRewarded(tag: String?) = guarded {
         show(rewarded, tag.orEmpty())
-    }
-
-    @JavascriptInterface
-    fun showRewardedInterstitial(tag: String?) = guarded {
-        show(rewardedInterstitial, tag.orEmpty())
-    }
-
-    /**
-     * Shows an interstitial now, for a page that would rather choose its own moment
-     * than leave it to the every-Nth-page rule. Silent if none is ready.
-     */
-    @JavascriptInterface
-    fun showInterstitial() = guarded {
-        interstitial?.showNow()
     }
 
     private fun show(ad: AdRewarded?, tag: String) {

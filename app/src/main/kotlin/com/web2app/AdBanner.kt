@@ -9,7 +9,6 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.MobileAds
 import com.web2app.models.AppConfig
 
 /**
@@ -35,15 +34,16 @@ class AdBanner(
         get() = config.ads.enabled && config.ads.banner.isNotBlank()
 
     /**
-     * Initialises the SDK and loads the first banner. Safe to call when ads are not
+     * Loads the first banner once consent permits it. Safe to call when ads are not
      * configured — it returns without touching the SDK.
+     *
+     * The SDK is started by [AdsConsent], never here: an ad requested before the CMP
+     * has an answer is exactly what the TCF rule forbids.
      */
     fun attach(slot: FrameLayout) {
         container = slot
         if (!enabled) return
-        // Off the main thread: initialize() reaches Play services over Binder and can
-        // block for seconds on a loaded device.
-        Thread { runCatching { MobileAds.initialize(activity) { load() } } }.start()
+        AdsConsent.whenReady(activity) { load() }
     }
 
     private fun load() = activity.runOnUiThread {

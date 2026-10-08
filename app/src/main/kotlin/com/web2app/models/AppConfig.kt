@@ -104,13 +104,9 @@ data class OnboardingScreen(
 data class Ads(
     val appId: String = "",
     val banner: String = "",
-    val interstitial: String = "",
     val rewarded: String = "",
-    val rewardedInterstitial: String = "",
     /** adaptive | banner | large | rectangle — chosen in the builder. */
     val bannerSize: String = "adaptive",
-    /** Show an interstitial every N page changes. 0 disables the format. */
-    val interstitialEvery: Int = 0,
 ) {
     /**
      * True when this app was built with ads configured at all.
@@ -274,11 +270,8 @@ fun parseAppConfig(json: JSONObject): AppConfig {
             if (a == null) Ads() else Ads(
                 appId = a.optString("admobAppId"),
                 banner = a.optString("banner"),
-                interstitial = a.optString("interstitial"),
                 rewarded = a.optString("rewarded"),
-                rewardedInterstitial = a.optString("rewardedInterstitial"),
                 bannerSize = a.optString("bannerSize", "adaptive"),
-                interstitialEvery = a.optInt("interstitialEvery", 0),
             )
         }
     )
@@ -377,11 +370,8 @@ fun appConfigToJson(config: AppConfig): JSONObject {
         JSONObject()
             .put("admobAppId", config.ads.appId)
             .put("banner", config.ads.banner)
-            .put("interstitial", config.ads.interstitial)
             .put("rewarded", config.ads.rewarded)
-            .put("rewardedInterstitial", config.ads.rewardedInterstitial)
             .put("bannerSize", config.ads.bannerSize)
-            .put("interstitialEvery", config.ads.interstitialEvery)
     )
     return obj
 }
