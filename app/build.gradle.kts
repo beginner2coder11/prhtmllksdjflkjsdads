@@ -44,7 +44,7 @@ android {
         // 23, not 21: play-services-ads 25.x refuses to merge below it. Only this
         // ads-carrying runtime pays that cost — the ad-free Pro runtime stays at 21,
         // which is the point of keeping them in separate repos.
-        minSdk = 23
+        minSdk = 24
         targetSdk = 36
         versionCode = cfgVersionCode
         versionName = cfgVersionName

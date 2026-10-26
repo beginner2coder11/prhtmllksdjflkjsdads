@@ -48,4 +48,4 @@ builds `app-debug.apk` and uploads it as a downloadable artifact. No SDK setup n
 ```
 
 ## Stack
-Kotlin · XML Views (no Compose) · AppCompat 1.7 · Material 1.12 · minSdk 21 · targetSdk/compileSdk 34 · Gradle 8.14 / AGP 8.3.2.
+Kotlin · XML Views (no Compose) · AppCompat 1.7 · Material 1.12 · minSdk 24 · targetSdk/compileSdk 34 · Gradle 8.14 / AGP 8.3.2.
