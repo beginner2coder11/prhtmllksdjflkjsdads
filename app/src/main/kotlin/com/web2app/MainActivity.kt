@@ -181,6 +181,8 @@ class MainActivity : AppCompatActivity() {
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
+            setGeolocationEnabled(true)
+            mediaPlaybackRequiresUserGesture = false
             databaseEnabled = true
             setSupportMultipleWindows(true)
             javaScriptCanOpenWindowsAutomatically = true
@@ -272,6 +274,14 @@ class MainActivity : AppCompatActivity() {
 
         // WebChromeClient with popup-window support – mirrors reference Webview.kt onCreateWindow
         webView.webChromeClient = object : WebChromeClient() {
+            // Camera/mic (getUserMedia) and location requests from the page.
+            override fun onPermissionRequest(request: PermissionRequest) =
+                permissionsHandler.onWebPermissionRequest(request)
+
+            override fun onGeolocationPermissionsShowPrompt(
+                origin: String?, callback: GeolocationPermissions.Callback?
+            ) = permissionsHandler.onWebGeolocationRequest(origin, callback)
+
             // Handles <input type="file"> taps via the Android system picker (zero media
             // permissions). params.createIntent() honours the input's `accept` types and
             // `multiple` attribute; parseResult() pairs with it to return the picked URIs.
@@ -315,6 +325,7 @@ class MainActivity : AppCompatActivity() {
                         javaScriptCanOpenWindowsAutomatically = true
                     }
                     webViewClient = object : WebViewClient() {}
+                    webChromeClient = permissionsHandler.webChromeClient()
                 }
 
                 android.app.Dialog(ctx).apply {

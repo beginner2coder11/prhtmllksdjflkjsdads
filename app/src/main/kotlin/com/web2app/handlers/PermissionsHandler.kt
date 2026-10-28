@@ -8,6 +8,9 @@ import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import android.webkit.GeolocationPermissions
+import android.webkit.PermissionRequest
+import android.webkit.WebChromeClient
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
@@ -27,10 +30,15 @@ class PermissionsHandler(private val activity: Activity) {
     private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var mediaPermissionLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
+    private lateinit var webPermissionLauncher: ActivityResultLauncher<Array<String>>
 
     private var locationPermissionCallback: ((Boolean) -> Unit)? = null
     private var fileCameraCallback: (() -> Unit)? = null
     private var audioVideoCallback: (() -> Unit)? = null
+
+    // Page (getUserMedia / geolocation) requests waiting for the Android prompt. Only one
+    // permission dialog can be up at a time, so they run one after another.
+    private val webPermissionQueue = ArrayDeque<Pair<Array<String>, () -> Unit>>()
 
     init {
         require(activity is ComponentActivity) {
@@ -73,6 +81,14 @@ class PermissionsHandler(private val activity: Activity) {
         notificationPermissionLauncher = componentActivity.registerForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { /* granted state handled by caller if needed */ }
+
+        // Permission launcher for requests coming from the web page
+        webPermissionLauncher = componentActivity.registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { _ ->
+            webPermissionQueue.removeFirstOrNull()?.second?.invoke()
+            webPermissionQueue.firstOrNull()?.let { webPermissionLauncher.launch(it.first) }
+        }
     }
 
     fun requestFileAndCameraPermissions(onResult: (() -> Unit)? = null) {
@@ -133,6 +149,59 @@ class PermissionsHandler(private val activity: Activity) {
             }
         }
     }
+
+    /**
+     * WebChromeClient that passes the page's camera/microphone and location requests on
+     * to Android. Without it the WebView denies every such request, even when the app
+     * already holds the permission. Used for popup windows; MainActivity's own client
+     * forwards to [onWebPermissionRequest] / [onWebGeolocationRequest].
+     */
+    fun webChromeClient(): WebChromeClient = object : WebChromeClient() {
+        override fun onPermissionRequest(request: PermissionRequest) =
+            onWebPermissionRequest(request)
+
+        override fun onGeolocationPermissionsShowPrompt(
+            origin: String?, callback: GeolocationPermissions.Callback?
+        ) = onWebGeolocationRequest(origin, callback)
+    }
+
+    /** Grants a page's getUserMedia() request for whatever the user allows on Android. */
+    fun onWebPermissionRequest(request: PermissionRequest) {
+        val needs = mutableMapOf<String, String>()   // web resource -> Android permission
+        val free = mutableListOf<String>()           // resources needing no permission
+        for (res in request.resources) when (res) {
+            PermissionRequest.RESOURCE_VIDEO_CAPTURE -> needs[res] = Manifest.permission.CAMERA
+            PermissionRequest.RESOURCE_AUDIO_CAPTURE -> needs[res] = Manifest.permission.RECORD_AUDIO
+            PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID -> free += res
+        }
+        requestForWeb(needs.values.distinct().toTypedArray()) {
+            val allowed = free + needs.filterValues { isGranted(it) }.keys
+            if (allowed.isEmpty()) request.deny() else request.grant(allowed.toTypedArray())
+        }
+    }
+
+    /** Answers a page's navigator.geolocation request. */
+    fun onWebGeolocationRequest(origin: String?, callback: GeolocationPermissions.Callback?) {
+        requestForWeb(
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+        ) {
+            val granted = isGranted(Manifest.permission.ACCESS_FINE_LOCATION) ||
+                isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)
+            callback?.invoke(origin, granted, false)
+        }
+    }
+
+    private fun requestForWeb(permissions: Array<String>, onDone: () -> Unit) {
+        if (checkPermissions(permissions)) {
+            onDone()
+            return
+        }
+        webPermissionQueue.addLast(permissions to onDone)
+        if (webPermissionQueue.size == 1) webPermissionLauncher.launch(permissions)
+    }
+
+    private fun isGranted(permission: String) =
+        ContextCompat.checkSelfPermission(activity, permission) == PackageManager.PERMISSION_GRANTED
 
     fun openAppSettings() {
         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
