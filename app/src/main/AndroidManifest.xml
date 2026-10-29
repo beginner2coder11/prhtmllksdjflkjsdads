@@ -22,6 +22,9 @@
 
     <!-- Audio/Video (enabled at runtime when permissions=[2] in app_settings.json) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- WebView needs this to open the mic for WebRTC calls; without it getUserMedia
+         fails with NotReadableError even when RECORD_AUDIO is granted. No prompt. -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <!-- Push Notifications (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

@@ -39,6 +39,7 @@ class MainActivity : AppCompatActivity() {
 
     /** Pending WebView file-input callback; must be invoked exactly once per chooser. */
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
+    private var fileChooserMultiple = false
     private lateinit var fileChooserLauncher: ActivityResultLauncher<Intent>
 
 
@@ -82,8 +83,7 @@ class MainActivity : AppCompatActivity() {
         fileChooserLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
-            val uris = WebChromeClient.FileChooserParams.parseResult(result.resultCode, result.data)
-            fileUploadCallback?.onReceiveValue(uris)
+            fileUploadCallback?.onReceiveValue(pickedUris(result.resultCode, result.data))
             fileUploadCallback = null
         }
 
@@ -293,6 +293,7 @@ class MainActivity : AppCompatActivity() {
                 // Release any previous callback so an abandoned input never dead-locks.
                 fileUploadCallback?.onReceiveValue(null)
                 fileUploadCallback = filePathCallback
+                fileChooserMultiple = fileChooserParams?.mode == FileChooserParams.MODE_OPEN_MULTIPLE
 
                 val intent = fileChooserParams?.createIntent()
                     ?: Intent(Intent.ACTION_GET_CONTENT).apply {
@@ -473,6 +474,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ─── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Files picked for <input type="file">. Multi-select pickers (e.g. the Android
+     * photo picker's "Add" mode) return them only in clipData, which
+     * FileChooserParams.parseResult() ignores, so read both.
+     */
+    private fun pickedUris(resultCode: Int, data: Intent?): Array<Uri>? {
+        if (resultCode != RESULT_OK || data == null) return null
+        val clip = data.clipData
+        val uris = if (clip != null && clip.itemCount > 0) {
+            (0 until clip.itemCount).mapNotNull { clip.getItemAt(it).uri }
+        } else {
+            listOfNotNull(data.data)
+        }
+        if (uris.isEmpty()) return null
+        return if (fileChooserMultiple) uris.toTypedArray() else arrayOf(uris.first())
+    }
 
     private fun safeParseColor(hex: String, default: Int): Int {
         return try {
