@@ -46,18 +46,6 @@ class MainActivity : AppCompatActivity() {
     private var selectedTabIndex = 0
 
     companion object {
-        /**
-         * Web hosts whose only purpose is to deep-link into an app. An https link to one
-         * of these is handed to the system (which routes it to the app via App Links)
-         * rather than loaded in the WebView.
-         */
-        private val APP_LINK_HOSTS = setOf(
-            "wa.me", "api.whatsapp.com", "chat.whatsapp.com",   // WhatsApp
-            "t.me", "telegram.me",                                // Telegram
-            "m.me",                                               // Messenger
-            "play.google.com",                                    // Play Store
-            "maps.google.com", "maps.app.goo.gl",                 // Google Maps
-        )
         const val EXTRA_APP_ID = "extra_app_id"
         private const val DEFAULT_THEME = 0xFF5B5BD6.toInt()
     }
@@ -226,24 +214,10 @@ class MainActivity : AppCompatActivity() {
                 val uri = request.url
                 val target = uri.toString()
 
-                // Anything that is not a web page belongs to another app: tel:, mailto:,
-                // sms:, whatsapp:, geo:, market:, intent:, and the rest. WebView cannot
-                // render those (it shows ERR_UNKNOWN_URL_SCHEME), so hand them to the
-                // system and keep the page where it is.
-                val scheme = uri.scheme?.lowercase()
-                if (scheme != null && scheme != "http" && scheme != "https" &&
-                    scheme != "file" && scheme != "about" && scheme != "javascript" &&
-                    scheme != "data" && scheme != "blob"
-                ) {
-                    openExternally(target)
-                    return true
-                }
-
-                // Some https links exist only to open another app: wa.me, t.me, the Play
-                // Store, Google Maps. Rendered in the WebView they show that service's
-                // marketing site instead — so treat them like a custom scheme.
-                if (uri.host?.lowercase()?.let { h -> APP_LINK_HOSTS.any { h == it || h.endsWith(".$it") } } == true) {
-                    openExternally(target)
+                // tel:, mailto:, whatsapp:, intent:, Google Maps, wa.me … belong to another
+                // app; the WebView would show ERR_UNKNOWN_URL_SCHEME or a marketing page.
+                if (ExternalLinks.isExternal(uri)) {
+                    ExternalLinks.open(this@MainActivity, target) { view.loadUrl(it) }
                     return true
                 }
 
@@ -325,18 +299,20 @@ class MainActivity : AppCompatActivity() {
                         setSupportMultipleWindows(true)
                         javaScriptCanOpenWindowsAutomatically = true
                     }
-                    webViewClient = object : WebViewClient() {}
                     webChromeClient = permissionsHandler.webChromeClient()
                 }
 
-                android.app.Dialog(ctx).apply {
+                val popupDialog = android.app.Dialog(ctx).apply {
                     setContentView(popupWebView)
                     window?.setLayout(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                    show()
                 }
+                // Non-web links in the popup (Google Maps' intent:// redirect, tel:,
+                // whatsapp:, …) go to their app instead of an ERR_UNKNOWN_URL_SCHEME page.
+                popupWebView.webViewClient = ExternalLinks.popupClient(this@MainActivity, popupDialog)
+                popupDialog.show()
 
                 val transport = resultMsg?.obj as? WebView.WebViewTransport ?: return false
                 transport.webView = popupWebView
@@ -515,40 +491,6 @@ class MainActivity : AppCompatActivity() {
         val activeColor = safeParseColor(appConfig.tabSettings.tabActiveColor, Color.BLUE)
         val rawBarColor = safeParseColor(appConfig.tabSettings.tabBarColor, Color.WHITE)
         return if (rawBarColor == Color.WHITE) lightTint(activeColor, 0.08f) else rawBarColor
-    }
-
-    /**
-     * Sends a non-web link to whatever app handles it. `intent:` URIs carry their own
-     * target (and often a `browser_fallback_url`); every other scheme is a plain VIEW.
-     * A scheme nobody on the device handles is reported, not swallowed — a dead tap
-     * with no feedback reads as a broken app.
-     */
-    private fun openExternally(url: String) {
-        try {
-            if (url.startsWith("intent:", ignoreCase = true)) {
-                val intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME)
-                // Try the launch rather than resolveActivity() first: since Android 11
-                // that query answers "none" for any package not declared in <queries>,
-                // which sent every intent:// link to its browser fallback even with the
-                // target app installed. startActivity itself is not filtered.
-                try {
-                    startActivity(intent)
-                    return
-                } catch (_: android.content.ActivityNotFoundException) {
-                    val fallback = intent.getStringExtra("browser_fallback_url")
-                    if (!fallback.isNullOrBlank()) {
-                        webView.loadUrl(fallback)
-                        return
-                    }
-                    throw android.content.ActivityNotFoundException()
-                }
-            }
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-        } catch (_: Exception) {
-            android.widget.Toast.makeText(
-                this, getString(R.string.no_app_for_link), android.widget.Toast.LENGTH_SHORT
-            ).show()
-        }
     }
 
     /**

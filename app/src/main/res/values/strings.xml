@@ -104,5 +104,4 @@
     <string name="perm_location">Location</string>
     <string name="perm_camera">Camera &amp; files</string>
     <string name="perm_audio">Microphone</string>
-    <string name="no_app_for_link">No app on this device can open that link.</string>
 </resources>
