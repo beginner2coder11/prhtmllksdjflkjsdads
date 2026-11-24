@@ -56,10 +56,23 @@ object LocalContent {
             return try {
                 WebResourceResponse(mimeOf(asset), null, assets.open(asset))
             } catch (e: IOException) {
+                // The Android build unpacks every `*.gz` asset and drops the extension, so
+                // `data.json.gz` ships as `data.json`. A page that fetches the .gz and
+                // decompresses it itself would get a 404 — serve the unpacked file
+                // compressed again, under the name the page asked for.
+                if (asset.endsWith(".gz", ignoreCase = true)) regzipped(asset.dropLast(3))?.let { return it }
                 // A real 404 rather than a null-bodied response, so a missing file shows
                 // as a missing file instead of a broken page.
                 notFound()
             }
+        }
+
+        private fun regzipped(stripped: String): WebResourceResponse? = try {
+            val out = java.io.ByteArrayOutputStream()
+            java.util.zip.GZIPOutputStream(out).use { gz -> assets.open(stripped).use { it.copyTo(gz) } }
+            WebResourceResponse("application/gzip", null, ByteArrayInputStream(out.toByteArray()))
+        } catch (e: IOException) {
+            null
         }
 
         private fun notFound() = WebResourceResponse(
