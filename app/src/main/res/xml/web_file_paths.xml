@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Copies made to view or share a file (WebFiles.cacheUri). -->
+    <cache-path name="web_files" path="web_files/" />
+    <!-- Saved files before Android 10 (WebFiles.saveToDownloads). -->
+    <external-files-path name="downloads" path="Download/" />
+</paths>

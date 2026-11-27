@@ -93,6 +93,17 @@
             android:windowSoftInputMode="adjustResize"
             android:label="${appLabel}" />
 
+        <!-- Hands files a page saved, opened or shared to viewer/share-target apps. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.webfiles"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/web_file_paths" />
+        </provider>
+
     </application>
 
 </manifest>
